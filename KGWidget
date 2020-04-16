@@ -1,0 +1,130 @@
+(function() {
+
+          const template = document.createElement('template');
+
+          template.innerHTML = `
+            <style>
+            </style>
+            <div>
+              <div><img image/></div>
+              <div><b>Name: </b><span name></span></div>
+              <div><b>Description: </b><span description></span></div>
+              <a link></a>
+              <p details></p>
+            </div>
+          `;
+
+        // Create a class for the element
+        class KGWidget extends HTMLElement {
+
+          constructor() {
+            super(); 
+            console.log("I am the KG widget and I want to be constructed.");
+            let shadowRoot = this.attachShadow({mode: "open"});
+            shadowRoot.appendChild(template.content.cloneNode(true));
+
+            this._name     = this.shadowRoot.querySelector('[name]');
+            this._description  = this.shadowRoot.querySelector('[description]');
+            this._image    = this.shadowRoot.querySelector('[image]');
+            this._link     = this.shadowRoot.querySelector('[link]');
+            this._details    = this.shadowRoot.querySelector('[details]');
+
+            this.addEventListener("click", event => {
+              var event = new Event("onClick");
+              this.dispatchEvent(event);
+            });
+            this._props = {};
+
+            console.log(this._name, this._image);
+          }
+
+          onCustomWidgetBeforeUpdate(changedProperties) {
+            console.log("onCustomWidgetBeforeUpdate", changedProperties);
+            this._props = { ...this._props, ...changedProperties };
+            if ("film" in changedProperties) {
+              this.callKGService(changedProperties["film"]);
+            }
+          }
+
+          onCustomWidgetAfterUpdate(changedProperties) {
+            console.log("onCustomWidgetAfterUpdate", changedProperties);
+          }
+
+          callKGService(sFilm){
+            var url = "https://kgsearch.googleapis.com/v1/entities:search?query=" 
+              + encodeURIComponent(sFilm) + "&key=ADD_YOUR_KEY&limit=1&indent=True"
+           
+
+            var oReq = new XMLHttpRequest();
+            
+            //var that = this;
+/*
+            function reqListener(){
+              var j = JSON.parse(oReq.responseText);
+                if(j.itemListElement && j.itemListElement.length > 0){
+                  var result = j.itemListElement[0].result;
+                  var name = result.name;
+                  var img, detailsURL, details;
+                  if(result.image && result.image.contentUrl){
+                    img = result.image.contentUrl;
+                  }
+                  var desc = result.description;
+
+                  if(result.detailedDescription){
+                    if(result.detailedDescription.url){
+                      detailsURL = result.detailedDescription.url;
+                    } 
+                    if(result.detailedDescription.articleBody){
+                      details = result.detailedDescription.articleBody;
+                    } 
+                  }
+                  
+                  that._name.innerText = name; 
+                  that._description.innerText = desc; 
+                  that._details.innerText = details; 
+                  that._image.setAttribute("src", img);
+                  that._link.setAttribute("href", detailsURL);
+                  that._link.innerText = detailsURL;
+              }
+            };*/
+
+            //oReq.addEventListener("load", reqListener);
+
+            oReq.addEventListener("load", () => {
+               var j = JSON.parse(oReq.responseText);
+                if(j.itemListElement && j.itemListElement.length > 0){
+                  var result = j.itemListElement[0].result;
+                  var name = result.name;
+                  var img, detailsURL, details;
+                  if(result.image && result.image.contentUrl){
+                    img = result.image.contentUrl;
+                  }
+                  var desc = result.description;
+
+                  if(result.detailedDescription){
+                    if(result.detailedDescription.url){
+                      detailsURL = result.detailedDescription.url;
+                    } 
+                    if(result.detailedDescription.articleBody){
+                      details = result.detailedDescription.articleBody;
+                    } 
+                  }
+                  
+                  this._name.innerText = name; 
+                  this._description.innerText = desc; 
+                  this._details.innerText = details; 
+                  this._image.setAttribute("src", img);
+                  this._link.setAttribute("href", detailsURL);
+                  this._link.innerText = detailsURL;
+              }             
+            });
+
+            oReq.open("GET", url);
+            oReq.send();
+          }
+        }
+
+        customElements.define('coil-kg-widget', KGWidget);
+
+})();
+
